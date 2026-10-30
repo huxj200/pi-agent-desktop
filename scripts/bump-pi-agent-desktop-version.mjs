@@ -12,7 +12,7 @@ const cargoPath = join(rootDir, "src-tauri", "Cargo.toml");
 const lockPath = join(rootDir, "src-tauri", "Cargo.lock");
 const desktopPackage = JSON.parse(await readFile(packagePath, "utf8"));
 const current = normalizeVersion(desktopPackage.version);
-const released = await fetchRecentReleases("abcwyc/pi-agent-desktop", { allowMissing: true });
+const released = await fetchRecentReleases("huxj200/pi-agent-desktop", { allowMissing: true });
 const next = nextDesktopVersion(current, released.map((release) => release.version));
 
 desktopPackage.version = next;

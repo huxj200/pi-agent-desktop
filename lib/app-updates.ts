@@ -34,7 +34,7 @@ export const APP_UPDATE_PROJECTS: readonly AppUpdateProject[] = [
   {
     id: "pi-agent-desktop",
     name: APP_DISTRIBUTION_NAME,
-    repository: "abcwyc/pi-agent-desktop",
+    repository: "huxj200/pi-agent-desktop",
     currentVersion: APP_VERSION,
   },
 ];
