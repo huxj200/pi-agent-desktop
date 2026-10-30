@@ -1,51 +1,32 @@
 # Type Safety
 
-> Type safety patterns in this project.
+> TypeScript conventions in this project.
 
 ---
 
 ## Overview
 
-<!--
-Document your project's type safety conventions here.
-
-Questions to answer:
-- What type system do you use?
-- How are types organized?
-- What validation library do you use?
-- How do you handle type inference?
--->
-
-(To be filled by the team)
-
----
+Strict TypeScript (`tsconfig.json`: `"strict": true`, `noEmit`, bundler module resolution, `@/*` path alias to repo root). Validation of the whole repo: `node_modules/.bin/tsc --noEmit`.
 
 ## Type Organization
 
-<!-- Where types are defined, shared types vs local types -->
-
-(To be filled by the team)
-
----
+- Shared wire/UI types: `lib/types.ts`.
+- Structural types for pi SDK objects: `lib/pi-types.ts` — local mirrors instead of importing SDK internals; keep them structural so SDK bumps don't break the app.
+- Contract drift between the session file format and our types is handled by `lib/normalize.ts` (`normalizeToolCalls()` fixes field-name mismatches) — never widen types to `any` to make a mismatch compile.
 
 ## Validation
 
-<!-- Runtime validation patterns (Zod, Yup, io-ts, etc.) -->
-
-(To be filled by the team)
-
----
+- No runtime validation library (Zod etc.) is in the dependency set; do not add one. Validate at the entry point with plain TS guards (see `isThemePreference`, `isDarkTheme` in `lib/theme.ts`).
+- Cross-boundary payloads (SSE events, `.jsonl` entries) get typed through `lib/session-reader.ts` adapters rather than inline casts.
 
 ## Common Patterns
 
-<!-- Type utilities, generics, type guards -->
-
-(To be filled by the team)
-
----
+- `Omit<ComponentPropsWithoutRef<...>, ...>` intersection types for component props (`components/AppSelect.tsx`).
+- `as const` for string-key maps (`APP_PREF_KEYS` in `lib/app-prefs.ts`).
+- Named exports of narrow literal-union types (`ThemePreference`, `ResolvedTheme`) co-located with their guard.
 
 ## Forbidden Patterns
 
-<!-- any, type assertions, etc. -->
-
-(To be filled by the team)
+- `any` in new code; `as unknown as X` double casts to force compile.
+- Comparing `enabledModels` patterns as strings, or assuming `provider/*` covers a provider — the minimal-edit engine in `lib/enabled-models.ts` is the only writer (`docs/agents/fork-models.md`).
+- Rebuilding model lists from `getAvailable()` instead of minimal edits.
