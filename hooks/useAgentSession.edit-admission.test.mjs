@@ -5,7 +5,7 @@ import ts from "typescript";
 
 const source = await readFile(new URL("./useAgentSession.ts", import.meta.url), "utf8");
 const start = source.indexOf("  const handleEditContent = useCallback(");
-const end = source.indexOf("\n\n", start);
+const end = source.indexOf(source.includes("\r\n") ? "\r\n\r\n" : "\n\n", start);
 assert.ok(start >= 0 && end > start);
 const callback = source.slice(start, end);
 const js = ts.transpileModule(`${callback}; return handleEditContent;`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
