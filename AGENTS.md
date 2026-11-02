@@ -67,6 +67,17 @@ Typecheck: `node_modules/.bin/tsc --noEmit` · Lint: `npm run lint`
   test process; trust fixtures must not inherit the user's ancestor skills. Await
   session shutdown before deleting MCP working directories. Real PTY integration
   runs in a child process; fake-clock tests use a controlled PTY.
+- **Three Windows-only test traps, none of them repo bugs.** `fixtureDir()` falls back
+  to `<repo>/test-results/fixtures` whenever the temp dir sits inside the user profile
+  (always true on Windows). Ancestor scans then reach the checkout itself, so a
+  repo-root `.agents/skills` (Trellis) makes every `lib/project-trust.test.mjs` and
+  `app/api/mcp/route-add.test.mjs` fixture "require trust": 20 failures that disappear
+  on a checkout without it. The same fallback makes `lib/artifact-index.test.mjs`
+  expect an absolute `displayPath` while the impl shortens it to `~`. Pointing `TEMP`
+  outside the profile (`$env:TEMP='E:\tmp'`) clears both classes but can time out the
+  MCP `sign-in` / `test` route suites. Third: `core.autocrlf=true` gives CRLF files, and
+  tests that slice source with a literal `"\n\n"` (e.g.
+  `hooks/useAgentSession.edit-admission.test.mjs`) then throw at module load.
 - **`next dev` rewrites `AGENTS.md`**: it appends a "This is NOT the Next.js you know" block
   to this file on every start. Preserve the project and user instructions here; review generated
   additions separately and never reset the entire file to discard development output.
@@ -268,6 +279,17 @@ Full per-merge reasoning (segments E, F, G, with what was adopted and what was d
 - **`lib/startup-preferences.ts` stays deleted** (new-session model picks are session-scoped); `PUT /api/models/default` is the only writer of global defaults.
 - **`package-lock.json` keeps the tauri plugin versions pinned to `src-tauri/Cargo.lock`**: restore HEAD's lock before `npm install --package-lock-only`, or the carets re-resolve and `release-workflows.test.mjs` fails.
 - After a merge: `node scripts/upstream-css-baseline.mjs update <upstream-ref>` and `npm run drift`.
+
+### Upstream sync (where the commits actually come from)
+`agegr/pi-web` is the web layer this repo grew out of; the repo as a whole is a fork of `abcwyc/pi-agent-desktop`, and that is the remote that ships the desktop releases. Add it once and merge it whole:
+
+```bash
+git remote add upstream https://github.com/abcwyc/pi-agent-desktop
+git fetch upstream --tags
+git merge upstream/main
+```
+
+`src-tauri/Cargo.toml`, `Cargo.lock`, `src-tauri/pi-agent-desktop-package.json` and `src-tauri/resources/component-versions.json` conflict on every release merge (both sides bump them); take upstream's side wholesale (`git checkout --theirs -- src-tauri/...`) and let the version numbers follow the release. The same applies to the branding lines (`lib/branding.ts`, `lib/app-updates.ts`, `scripts/release-components*.mjs`, `scripts/bump-pi-agent-desktop-version.mjs`, the updater URL in `src-tauri/tauri.conf.json`): either the fork owns them or upstream does, and a half-merged mix breaks the updater. Then run `node_modules/.bin/tsc --noEmit`, `npm test`, `npm run lint`, `npm run drift`.
 
 ## Pi Session File Format
 
